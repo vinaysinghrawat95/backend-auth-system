@@ -2,9 +2,8 @@ package com.vinay.auth_system.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDateTime;
-import java.util.Date;
+
 
 @Data
 @Entity
@@ -21,6 +20,8 @@ public class User {
     @Column(nullable = false)
     private String password;
     private LocalDateTime createdAt;
+
+
 
     @PrePersist
     public void onCreate() {

@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @AllArgsConstructor
 @CrossOrigin("http://127.0.0.1:5500/")
 @RestController()
@@ -33,9 +35,10 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signupUser(@Valid  @RequestBody SignupRequestDTO signupRequestDTO){
+    public ResponseEntity<Map<String, String>> signupUser(@Valid  @RequestBody SignupRequestDTO signupRequestDTO){
         userService.signupUser(signupRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Account created Successfully");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message","Account created successfully"));
     }
 
     @PostMapping("/login")

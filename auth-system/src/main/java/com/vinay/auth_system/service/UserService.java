@@ -60,6 +60,6 @@ public class UserService {
         User user = userRepo.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found"));
         System.out.println("Inside getProfile after fetching db "+ user);
-        return new UserResponseDTO(user.getId(), user.getEmail(), user.getUsername());
+        return new UserResponseDTO(user.getId(),user.getUsername(), user.getEmail());
     }
 }
