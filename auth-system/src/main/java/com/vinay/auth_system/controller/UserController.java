@@ -29,7 +29,7 @@ public class UserController {
         return "OK";
     }
 
-    @GetMapping("/home")
+    @GetMapping("/greet")
     public String greet(){
         return "Hello I'm Vinay Singh Rawat";
     }
@@ -43,12 +43,11 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginUser(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
-        System.out.println("Login Success");
         String token = userService.loginUser(loginRequestDTO);
         return new ResponseEntity<>(new AuthResponse(token) , HttpStatus.OK);
     }
 
-    @GetMapping("/profile")
+    @GetMapping("/home")
     public ResponseEntity<UserResponseDTO> getProfile(Authentication authentication){
         String email = authentication.getName();
         System.out.println("In controller email "+email);

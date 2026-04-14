@@ -16,6 +16,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,7 +29,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.csrf(AbstractHttpConfigurer::disable)
+        return httpSecurity
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://127.0.0.1:5500"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authHttpReq -> authHttpReq.
                         requestMatchers("/api/auth/signup", "/api/auth/login")
                         .permitAll()
