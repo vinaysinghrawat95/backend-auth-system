@@ -32,7 +32,12 @@ public class SecurityConfig {
         return httpSecurity
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://127.0.0.1:5500"));
+                    config.setAllowedOrigins(List.of(
+                            "http://127.0.0.1:5500",
+                            "http://localhost:5500",
+                            "https://secureauthx.netlify.app"
+                    ));
+
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
                     config.setAllowCredentials(true);

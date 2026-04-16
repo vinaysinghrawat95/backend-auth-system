@@ -24,6 +24,9 @@ public class UserService {
 
     public void signupUser(SignupRequestDTO signupRequestDTO) {
 
+        if(!signupRequestDTO.getEmail().equals(signupRequestDTO.getEmail().toLowerCase())){
+            throw new RuntimeException("Invalid email format.");
+        }
         if(signupRequestDTO == null){
             throw new RuntimeException("Invalid signup request.");
         }
