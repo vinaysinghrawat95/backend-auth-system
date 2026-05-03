@@ -29,10 +29,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        String email = user.getEmail();
-        System.out.println("Inside userPrincipal email: "+email);
-        return email;
-
+        return user.getEmail();
     }
 
     @Override
