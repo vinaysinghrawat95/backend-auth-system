@@ -21,6 +21,8 @@ public class User {
     private String password;
     private LocalDateTime createdAt;
 
+    private String refreshToken;
+    private LocalDateTime refreshTokenExpiry;
 
 
     @PrePersist

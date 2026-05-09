@@ -22,12 +22,6 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/test")
-    public String test(){
-        System.out.println("TEST HIT");
-        return "OK";
-    }
-
     @GetMapping("/greet")
     public String greet(){
         return "Hello I'm Vinay Singh Rawat";
@@ -42,8 +36,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> loginUser(@Valid @RequestBody LoginRequestDTO loginRequestDTO){
-        String token = userService.loginUser(loginRequestDTO);
-        return new ResponseEntity<>(new AuthResponse(token) , HttpStatus.OK);
+        AuthResponse authResponse = userService.loginUser(loginRequestDTO);
+        return new ResponseEntity<>(authResponse, HttpStatus.OK);
     }
 
     @GetMapping("/home")
@@ -52,6 +46,19 @@ public class UserController {
         System.out.println("In controller email "+email);
         UserResponseDTO userResponseDTO = userService.getProfile(email);
         return ResponseEntity.ok(userResponseDTO);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> request){
+        String refreshToken = request.get("refreshToken");
+        return ResponseEntity.ok(userService.refreshToken(refreshToken));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@RequestBody Map<String, String> request){
+        String refreshToken = request.get("refreshToken");
+        userService.logout(refreshToken);
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully", "type", "success"));
     }
 
 }

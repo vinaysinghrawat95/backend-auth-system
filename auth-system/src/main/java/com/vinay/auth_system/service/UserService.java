@@ -1,5 +1,6 @@
 package com.vinay.auth_system.service;
 
+import com.vinay.auth_system.dto.AuthResponse;
 import com.vinay.auth_system.dto.LoginRequestDTO;
 import com.vinay.auth_system.dto.SignupRequestDTO;
 import com.vinay.auth_system.dto.UserResponseDTO;
@@ -12,6 +13,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
@@ -21,6 +26,7 @@ public class UserService {
     private final UserRepository userRepo;
     private final BCryptPasswordEncoder encoder;
     private final AuthenticationManager authenticationManager;
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     public void signupUser(SignupRequestDTO signupRequestDTO) {
 
@@ -44,7 +50,7 @@ public class UserService {
 
     }
 
-    public String loginUser(LoginRequestDTO loginRequestDTO) {
+    public AuthResponse loginUser(LoginRequestDTO loginRequestDTO) {
 
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
@@ -52,18 +58,49 @@ public class UserService {
                             loginRequestDTO.getPassword()
                     )
             );
-            return jwtService.generateToken(loginRequestDTO.getEmail());
+
+            String refreshToken = jwtService.generateRefreshToken();
+
+            User user = userRepo.findByEmail(loginRequestDTO.getEmail())
+                    .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+
+            user.setRefreshToken(refreshToken);
+            user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(7));
+            userRepo.save(user);
+
+            String accessToken = jwtService.generateToken(loginRequestDTO.getEmail());
+            return new AuthResponse(accessToken, refreshToken);
 
         }catch (BadCredentialsException badCredentialsException){
             throw new BadCredentialsException("Invalid Credential");
         }
     }
 
-    public UserResponseDTO getProfile(String email) {
-        System.out.println("Inside getProfile service : "+email);
+    public UserResponseDTO getProfile(String email){
+        log.info("Inside getProfile service");
         User user = userRepo.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not found"));
-        System.out.println("Inside getProfile after fetching db "+ user);
         return new UserResponseDTO(user.getId(),user.getUsername(), user.getEmail());
+    }
+
+    public AuthResponse refreshToken(String refreshToken){
+        User user = userRepo.findByRefreshToken(refreshToken)
+                .orElseThrow(()->new RuntimeException("Invalid refresh token"));
+
+        if(user.getRefreshTokenExpiry().isBefore(LocalDateTime.now())){
+            throw new RuntimeException("Refresh token expired, Please login again");
+        }
+
+        String newAccessToken = jwtService.generateToken(user.getEmail());
+        return new AuthResponse(newAccessToken, refreshToken);
+    }
+
+    public void logout(String refreshToken){
+        User user = userRepo.findByRefreshToken(refreshToken)
+                .orElseThrow(()-> new RuntimeException("Invalid refresh token"));
+
+        user.setRefreshToken(null);
+        user.setRefreshTokenExpiry(null);
+        userRepo.save(user);
     }
 }
