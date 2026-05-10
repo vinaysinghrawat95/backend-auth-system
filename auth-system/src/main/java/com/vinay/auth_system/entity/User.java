@@ -15,14 +15,20 @@ public class User {
     private long id;
     @Column(nullable = false)
     private String username;
+
     @Column(unique = true, nullable = false)
     private String email;
+
     @Column(nullable = false)
     private String password;
+
     private LocalDateTime createdAt;
 
     private String refreshToken;
     private LocalDateTime refreshTokenExpiry;
+
+    private boolean isVerified;
+    private String verificationToken;
 
 
     @PrePersist

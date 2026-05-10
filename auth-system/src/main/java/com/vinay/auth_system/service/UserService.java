@@ -15,8 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -27,6 +27,7 @@ public class UserService {
     private final BCryptPasswordEncoder encoder;
     private final AuthenticationManager authenticationManager;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final EmailService emailService;
 
     public void signupUser(SignupRequestDTO signupRequestDTO) {
 
@@ -41,14 +42,35 @@ public class UserService {
         if(userRepo.existsByEmail(signupRequestDTO.getEmail())){
             throw new RuntimeException("Email already used.");
         }
+
+        String verificationToken = UUID.randomUUID().toString();
+
         User user = new User();
         user.setUsername(signupRequestDTO.getUsername());
         user.setEmail(signupRequestDTO.getEmail());
         user.setPassword(encoder.encode(signupRequestDTO.getPassword()));
+        user.setVerificationToken(verificationToken);
+        user.setVerified(false);
 
         userRepo.save(user);
 
+        emailService.sendVerificationEmail(signupRequestDTO.getEmail(), verificationToken);
+
     }
+
+    public void verifyEmail(String token){
+        User user = userRepo.findByVerificationToken(token)
+                .orElseThrow(()-> new RuntimeException("Invalid verification token"));
+
+        if(user.isVerified()){
+            throw new RuntimeException("User already verified");
+        }
+
+        user.setVerified(true);
+        user.setVerificationToken(null);
+        userRepo.save(user);
+    }
+
 
     public AuthResponse loginUser(LoginRequestDTO loginRequestDTO) {
 
@@ -59,11 +81,14 @@ public class UserService {
                     )
             );
 
-            String refreshToken = jwtService.generateRefreshToken();
-
             User user = userRepo.findByEmail(loginRequestDTO.getEmail())
                     .orElseThrow(()-> new UsernameNotFoundException("User not found"));
 
+            if(!user.isVerified()){
+                throw new RuntimeException("Please verify your token first");
+            }
+
+            String refreshToken = jwtService.generateRefreshToken();
             user.setRefreshToken(refreshToken);
             user.setRefreshTokenExpiry(LocalDateTime.now().plusDays(7));
             userRepo.save(user);

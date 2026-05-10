@@ -31,7 +31,13 @@ public class UserController {
     public ResponseEntity<Map<String, String>> signupUser(@Valid  @RequestBody SignupRequestDTO signupRequestDTO){
         userService.signupUser(signupRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message","Account created successfully"));
+                .body(Map.of("message","Registration successfully, Please check you email to verify your account"));
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token){
+        userService.verifyEmail(token);
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully!", "type", "success"));
     }
 
     @PostMapping("/login")
